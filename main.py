@@ -75,6 +75,7 @@ if page == "🏠 Dashboard":
     df_payment = load_csv(PAYMENT_CSV_URL, drop_cols=["Timestamp"])
     df_milk_m = load_csv(MILK_DIS_M_CSV_URL, drop_cols=["Timestamp"])
     df_milk_e = load_csv(MILK_DIS_E_CSV_URL, drop_cols=["Timestamp"])
+    df_cow_log = load_csv(COW_LOG_CSV_URL, drop_cols=["Timestamp"])
 
     # ---- Totals ----
     total_expense = df_expense["Amount"].sum() if "Amount" in df_expense.columns else 0
@@ -98,27 +99,54 @@ if page == "🏠 Dashboard":
     col5.metric("🌇 Evening Milk", f"{total_milk_e:.2f} L")
 
     # ----------------------------
+    # TOTAL MILKING DATA (FROM COW LOG)
+    # ----------------------------
+    st.divider()
+    st.subheader("🐄 Milk Production Summary (from Milking & Feeding Log)")
+
+    if not df_cow_log.empty:
+        # Normalize columns
+        df_cow_log.columns = [c.strip().lower() for c in df_cow_log.columns]
+
+        if "date" in df_cow_log.columns and "milking -दूध" in df_cow_log.columns:
+            df_cow_log["date"] = pd.to_datetime(df_cow_log["date"], errors="coerce")
+            df_cow_log["milking -दूध"] = pd.to_numeric(df_cow_log["milking -दूध"], errors="coerce")
+
+            # Group milk by date
+            milk_per_day = df_cow_log.groupby("date")["milking -दूध"].sum().reset_index()
+            total_milk_produced = milk_per_day["milking -दूध"].sum()
+
+            colA, colB = st.columns(2)
+            colA.metric("Total Milk Produced", f"{total_milk_produced:.2f} L")
+            colB.metric("Number of Days Recorded", f"{len(milk_per_day)} days")
+
+            st.caption("📈 Daily Milk Production (Morning + Evening Combined)")
+            st.line_chart(milk_per_day.set_index("date"))
+        else:
+            st.warning("⚠️ 'Date' or 'Milking -दूध' column not found in cow log sheet.")
+    else:
+        st.info("No milking & feeding data found yet.")
+
+    # ----------------------------
     # FUND AVAILABLE AT BIPIN KUMAR
     # ----------------------------
-    
-    # Filter data for Bipin Kumar
+    st.divider()
+    st.subheader("💼 Fund Summary")
+
     bipin_invest = df_invest[df_invest["Paid To"].str.contains("Bipin Kumar", case=False, na=False)] if "Paid To" in df_invest.columns else pd.DataFrame()
     bipin_payment = df_payment[df_payment["Received By"].str.contains("Bipin Kumar", case=False, na=False)] if "Received By" in df_payment.columns else pd.DataFrame()
     bipin_expense = df_expense[df_expense["Expense By"].str.contains("Bipin Kumar", case=False, na=False)] if "Expense By" in df_expense.columns else pd.DataFrame()
-    
-    # Calculate totals
+
     total_invest_bipin = bipin_invest["Amount"].sum() if "Amount" in bipin_invest.columns else 0
     total_payment_bipin = bipin_payment["Amount"].sum() if "Amount" in bipin_payment.columns else 0
     total_expense_bipin = bipin_expense["Amount"].sum() if "Amount" in bipin_expense.columns else 0
-    
-    # Fund available at Bipin Kumar
+
     fund_bipin = total_invest_bipin + total_payment_bipin - total_expense_bipin
-    
-    st.divider()
-    st.subheader("💼 Fund Summary")
-    
     st.metric("Fund Available at Bipin Kumar", f"₹{fund_bipin:,.2f}")
 
+    # ----------------------------
+    # RECENT EXPENSES
+    # ----------------------------
     st.divider()
     st.subheader("📅 Recent Expense Entries")
     if not df_expense.empty:
