@@ -97,6 +97,28 @@ if page == "🏠 Dashboard":
     col5.metric("🌅 Morning Milk", f"{total_milk_m:.2f} L")
     col5.metric("🌇 Evening Milk", f"{total_milk_e:.2f} L")
 
+    # ----------------------------
+    # FUND AVAILABLE AT BIPIN KUMAR
+    # ----------------------------
+    
+    # Filter data for Bipin Kumar
+    bipin_invest = df_invest[df_invest["Paid To"].str.contains("Bipin Kumar", case=False, na=False)] if "Paid To" in df_invest.columns else pd.DataFrame()
+    bipin_payment = df_payment[df_payment["Received By"].str.contains("Bipin Kumar", case=False, na=False)] if "Received By" in df_payment.columns else pd.DataFrame()
+    bipin_expense = df_expense[df_expense["Expense By"].str.contains("Bipin Kumar", case=False, na=False)] if "Expense By" in df_expense.columns else pd.DataFrame()
+    
+    # Calculate totals
+    total_invest_bipin = bipin_invest["Amount"].sum() if "Amount" in bipin_invest.columns else 0
+    total_payment_bipin = bipin_payment["Amount"].sum() if "Amount" in bipin_payment.columns else 0
+    total_expense_bipin = bipin_expense["Amount"].sum() if "Amount" in bipin_expense.columns else 0
+    
+    # Fund available at Bipin Kumar
+    fund_bipin = total_invest_bipin + total_payment_bipin - total_expense_bipin
+    
+    st.divider()
+    st.subheader("💼 Fund Summary")
+    
+    st.metric("Fund Available at Bipin Kumar", f"₹{fund_bipin:,.2f}")
+
     st.divider()
     st.subheader("📅 Recent Expense Entries")
     if not df_expense.empty:
