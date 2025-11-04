@@ -26,7 +26,6 @@ EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gv
 COW_LOG_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COW_LOG_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=dailylog"
 PAYMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{PAYMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=payment"
 
-
 # ----------------------------
 # DATA LOADING FUNCTION
 # ----------------------------
@@ -41,6 +40,18 @@ def load_csv(url, drop_cols=None):
         st.error(f"❌ Failed to load data from Google Sheet: {e}")
         return pd.DataFrame()
 
+# ----------------------------
+# HELPER FUNCTIONS
+# ----------------------------
+def sum_numeric_columns(df, exclude_cols=None):
+    """Sum all numeric columns except the excluded ones (used for milk totals)."""
+    if df.empty:
+        return 0
+    if exclude_cols is None:
+        exclude_cols = []
+    numeric_cols = [col for col in df.columns if col not in exclude_cols]
+    df_numeric = df[numeric_cols].apply(pd.to_numeric, errors="coerce")
+    return df_numeric.sum().sum()
 
 # ----------------------------
 # SIDEBAR NAVIGATION
@@ -58,23 +69,24 @@ if page == "🏠 Dashboard":
     st.title("📊 Dairy Farm Dashboard")
     st.caption("Overview of total performance and key farm metrics.")
 
-    # Load all relevant datasets
+    # Load all data
     df_expense = load_csv(EXPENSE_CSV_URL, drop_cols=["Timestamp"])
     df_invest = load_csv(INVESTMENT_CSV_URL, drop_cols=["Timestamp"])
     df_payment = load_csv(PAYMENT_CSV_URL, drop_cols=["Timestamp"])
     df_milk_m = load_csv(MILK_DIS_M_CSV_URL, drop_cols=["Timestamp"])
     df_milk_e = load_csv(MILK_DIS_E_CSV_URL, drop_cols=["Timestamp"])
 
-    # Calculate metrics safely
+    # ---- Totals ----
     total_expense = df_expense["Amount"].sum() if "Amount" in df_expense.columns else 0
     total_invest = df_invest["Amount"].sum() if "Amount" in df_invest.columns else 0
     total_payment = df_payment["Amount"].sum() if "Amount" in df_payment.columns else 0
 
-    total_milk_m = df_milk_m["Quantity"].sum() if "Quantity" in df_milk_m.columns else 0
-    total_milk_e = df_milk_e["Quantity"].sum() if "Quantity" in df_milk_e.columns else 0
+    # Milk totals (sum all numeric columns except Timestamp & Date)
+    total_milk_m = sum_numeric_columns(df_milk_m, exclude_cols=["Timestamp", "Date"])
+    total_milk_e = sum_numeric_columns(df_milk_e, exclude_cols=["Timestamp", "Date"])
     total_milk = total_milk_m + total_milk_e
 
-    # KPI metrics
+    # ---- KPIs ----
     col1, col2, col3 = st.columns(3)
     col1.metric("💸 Total Expenses", f"₹{total_expense:,.2f}")
     col2.metric("📈 Total Investment", f"₹{total_invest:,.2f}")
@@ -156,7 +168,6 @@ elif page == "Investments":
         st.dataframe(df_invest, use_container_width=True)
     else:
         st.info("No investment data found yet.")
-
 
 # ----------------------------
 # REFRESH BUTTON
