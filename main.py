@@ -120,8 +120,6 @@ if page == "🏠 Dashboard":
             colA.metric("Total Milk Produced", f"{total_milk_produced:.2f} L")
             colB.metric("Number of Days Recorded", f"{len(milk_per_day)} days")
 
-            st.caption("📈 Daily Milk Production (Morning + Evening Combined)")
-            st.line_chart(milk_per_day.set_index("date"))
         else:
             st.warning("⚠️ 'Date' or 'Milking -दूध' column not found in cow log sheet.")
     else:
