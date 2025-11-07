@@ -131,6 +131,9 @@ elif page == "Milking & Feeding":
     df = load_csv(COW_LOG_CSV_URL, drop_cols=["Timestamp"])
 
     if not df.empty:
+        if "Date" in df.columns:
+            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+            df = df.sort_values("Date", ascending=False)
         st.dataframe(df, use_container_width=True)
     else:
         st.info("No milking & feeding data available yet.")
