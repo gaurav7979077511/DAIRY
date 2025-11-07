@@ -155,4 +155,5 @@ elif page == "Milk Distribution":
 
     # Display raw data
     st.subheader("Morning Distribution")
-    st.dataframe(df_morning, use_container_width=Tr_
+    st.dataframe(df_morning, use_container_width=True)
+
