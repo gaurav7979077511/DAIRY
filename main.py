@@ -156,4 +156,57 @@ elif page == "Milk Distribution":
     # Display raw data
     st.subheader("Morning Distribution")
     st.dataframe(df_morning, use_container_width=True)
+    st.subheader("Evening Distribution")
+    st.dataframe(df_evening, use_container_width=True)
 
+    # --- Daily totals ---
+    st.divider()
+    st.subheader("📅 Daily Milk Distribution & Validation")
+
+    try:
+        for df_ in [df_morning, df_evening]:
+            df_.columns = [c.strip().lower() for c in df_.columns]
+            df_["date"] = pd.to_datetime(df_["date"], errors="coerce")
+
+        df_morning_total = df_morning.groupby("date").sum(numeric_only=True).reset_index()
+        df_evening_total = df_evening.groupby("date").sum(numeric_only=True).reset_index()
+        dist = pd.merge(df_morning_total, df_evening_total, on="date", how="outer").fillna(0)
+        dist["distributed_total"] = dist.drop(columns=["date"]).sum(axis=1)
+
+        # --- Produced vs Distributed ---
+        df_cow_log.columns = [c.strip().lower() for c in df_cow_log.columns]
+        df_cow_log["date"] = pd.to_datetime(df_cow_log["date"], errors="coerce")
+        df_cow_log["milking -दूध"] = pd.to_numeric(df_cow_log["milking -दूध"], errors="coerce")
+        produced = df_cow_log.groupby("date")["milking -दूध"].sum().reset_index()
+        compare = pd.merge(produced, dist[["date", "distributed_total"]], on="date", how="outer").fillna(0)
+        compare["remaining/loss"] = compare["milking -दूध"] - compare["distributed_total"]
+
+        st.dataframe(compare, use_container_width=True)
+        st.bar_chart(compare.set_index("date")[["milking -दूध", "distributed_total", "remaining/loss"]])
+
+    except Exception as e:
+        st.warning(f"⚠️ Could not calculate distribution validation: {e}")
+
+# ----------------------------
+# EXPENSE, PAYMENTS, INVESTMENTS (unchanged)
+# ----------------------------
+elif page == "Expense":
+    st.title("💸 Expense Tracker")
+    df_expense = load_csv(EXPENSE_CSV_URL, drop_cols=["Timestamp"])
+    st.dataframe(df_expense, use_container_width=True if not df_expense.empty else False)
+
+elif page == "Payments":
+    st.title("💰 Payments Record")
+    df_payment = load_csv(PAYMENT_CSV_URL, drop_cols=["Timestamp"])
+    st.dataframe(df_payment, use_container_width=True if not df_payment.empty else False)
+
+elif page == "Investments":
+    st.title("📈 Investment Log")
+    df_invest = load_csv(INVESTMENT_CSV_URL, drop_cols=["Timestamp"])
+    st.dataframe(df_invest, use_container_width=True if not df_invest.empty else False)
+
+# ----------------------------
+# REFRESH BUTTON
+# ----------------------------
+if st.sidebar.button("🔁 Refresh"):
+    st.rerun()
