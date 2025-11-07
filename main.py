@@ -131,6 +131,11 @@ elif page == "Milking & Feeding":
     df = load_csv(COW_LOG_CSV_URL, drop_cols=["Timestamp"])
 
     if not df.empty:
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.info("No milking & feeding data available yet.")
+
+    if not df.empty:
         df.columns = [c.strip().lower() for c in df.columns]
         if "date" in df.columns and "cowid" in df.columns and "milking -दूध" in df.columns:
             df["date"] = pd.to_datetime(df["date"], errors="coerce")
