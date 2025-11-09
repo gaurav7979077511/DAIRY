@@ -1,14 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-# ----------------------------
-# PAGE CONFIG
-# ----------------------------
+# ============================================================
+# PAGE CONFIGURATION
+# ============================================================
 st.set_page_config(page_title="Dairy Farm Management", layout="wide")
 
-# ----------------------------
-# GOOGLE SHEET IDS FROM SECRETS
-# ----------------------------
+# ============================================================
+# GOOGLE SHEET IDS (from Streamlit Secrets)
+# ============================================================
 INVESTMENT_SHEET_ID = st.secrets["sheets"]["INVESTMENT_SHEET_ID"]
 MILK_DIS_M_SHEET_ID = st.secrets["sheets"]["MILK_DIS_M_SHEET_ID"]
 MILK_DIS_E_SHEET_ID = st.secrets["sheets"]["MILK_DIS_E_SHEET_ID"]
@@ -16,9 +16,9 @@ EXPENSE_SHEET_ID = st.secrets["sheets"]["EXPENSE_SHEET_ID"]
 COW_LOG_SHEET_ID = st.secrets["sheets"]["COW_LOG_SHEET_ID"]
 PAYMENT_SHEET_ID = st.secrets["sheets"]["PAYMENT_SHEET_ID"]
 
-# ----------------------------
-# SHEET NAMES & URLs
-# ----------------------------
+# ============================================================
+# GOOGLE SHEET CSV EXPORT LINKS
+# ============================================================
 INVESTMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{INVESTMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=investment"
 MILK_DIS_M_CSV_URL = f"https://docs.google.com/spreadsheets/d/{MILK_DIS_M_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=morning"
 MILK_DIS_E_CSV_URL = f"https://docs.google.com/spreadsheets/d/{MILK_DIS_E_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=evening"
@@ -26,11 +26,12 @@ EXPENSE_CSV_URL = f"https://docs.google.com/spreadsheets/d/{EXPENSE_SHEET_ID}/gv
 COW_LOG_CSV_URL = f"https://docs.google.com/spreadsheets/d/{COW_LOG_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=dailylog"
 PAYMENT_CSV_URL = f"https://docs.google.com/spreadsheets/d/{PAYMENT_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=payment"
 
-# ----------------------------
-# DATA LOADING FUNCTION
-# ----------------------------
+# ============================================================
+# UTILITY FUNCTIONS
+# ============================================================
 @st.cache_data(ttl=600)
 def load_csv(url, drop_cols=None):
+    """Load a CSV from Google Sheets"""
     try:
         df = pd.read_csv(url)
         if drop_cols:
@@ -40,7 +41,9 @@ def load_csv(url, drop_cols=None):
         st.error(f"❌ Failed to load data from Google Sheet: {e}")
         return pd.DataFrame()
 
+
 def sum_numeric_columns(df, exclude_cols=None):
+    """Sum all numeric columns except excluded ones"""
     if df.empty:
         return 0
     if exclude_cols is None:
@@ -49,26 +52,77 @@ def sum_numeric_columns(df, exclude_cols=None):
     df_numeric = df[numeric_cols].apply(pd.to_numeric, errors="coerce")
     return df_numeric.sum().sum()
 
-# ----------------------------
+# ============================================================
 # SIDEBAR NAVIGATION
-# ----------------------------
+# ============================================================
 st.sidebar.header("Navigation")
 page = st.sidebar.radio(
     "Go to",
-    ["🏠 Dashboard", "Milking & Feeding", "Milk Distribution", "Expense", "Payments", "Investments"]
+    [
+        "🏠 Dashboard",
+        "Milking & Feeding",
+        "Milk Distribution",
+        "Expense",
+        "Payments",
+        "Investments",
+    ],
 )
-    # ------------------------------
-    # DASHBOARD ENHANCEMENT
-    # ------------------------------
-# ------------------------------
-# DASHBOARD ENHANCEMENT
-# ------------------------------
+
+# ============================================================
+# 🏠 DASHBOARD PAGE
+# ============================================================
 if page == "🏠 Dashboard":
-    st.header("📊 Dairy Dashboard Summary")
 
+    # -------------------- Custom Dark Mode CSS --------------------
+    st.markdown(
+        """
+        <style>
+        :root {
+            --bg-color: #0e1117;
+            --card-bg: #1a1d23;
+            --text-color: #f0f2f6;
+            --accent: #00FFFF;
+            --border-color: #00FFFF44;
+            --shadow-color: #00FFFF22;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-color: #f9f9f9;
+                --card-bg: #ffffff;
+                --text-color: #000000;
+                --accent: #0077ff;
+                --border-color: #0077ff33;
+                --shadow-color: #0077ff11;
+            }
+        }
+        .main { background-color: var(--bg-color); color: var(--text-color); }
+        div[data-testid="stMetric"] {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 0 8px var(--shadow-color);
+            text-align: center;
+        }
+        h1, h2, h3 { color: var(--accent); }
+        hr { border: 1px solid var(--border-color); }
+        label, .stRadio { color: var(--text-color) !important; }
+        @media (max-width: 768px) {
+            div[data-testid="stMetric"] { padding: 10px; font-size: 0.85rem; }
+            h1, h2, h3 { font-size: 1rem; }
+        }
+        .radio-center { display: flex; justify-content: center; margin-top: 10px; margin-bottom: 25px; }
+        div[data-testid="stRadio"] > div { justify-content: center !important; }
+        div[data-testid="stRadio"] label { color: var(--text-color) !important; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.header("🐄 Dairy Farm Dashboard")
+
+    # -------------------- Load Data --------------------
     START_DATE = pd.Timestamp("2025-11-01")
-
-    # --- Load data ---
     df_cow_log = load_csv(COW_LOG_CSV_URL, drop_cols=["Timestamp"])
     df_expense = load_csv(EXPENSE_CSV_URL, drop_cols=["Timestamp"])
     df_milk_m = load_csv(MILK_DIS_M_CSV_URL, drop_cols=["Timestamp"])
@@ -76,32 +130,28 @@ if page == "🏠 Dashboard":
     df_payment_received = load_csv(PAYMENT_CSV_URL, drop_cols=["Timestamp"])
     df_investment = load_csv(INVESTMENT_CSV_URL, drop_cols=["Timestamp"])
 
-    # --- Filter all data from 1st Nov 2025 onward ---
+    # -------------------- Filter from 1 Nov 2025 --------------------
     for df in [df_cow_log, df_expense, df_milk_m, df_milk_e, df_payment_received, df_investment]:
         if "Date" in df.columns:
             df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
             df.dropna(subset=["Date"], inplace=True)
             df = df[df["Date"] >= START_DATE]
 
-    # ------------------------------
-    # LIFETIME SUMMARY (from 1 Nov 2025)
-    # ------------------------------
-    st.subheader("📅 Lifetime Summary (From 1 Nov 2025)")
+    # -------------------- Lifetime Summary --------------------
+    st.subheader("📊 Overall Summary")
 
-    # --- Total milk produced ---
     milk_col = next((c for c in df_cow_log.columns if "milk" in c.lower() or "दूध" in c), None)
     total_milk_produced = pd.to_numeric(df_cow_log[milk_col], errors="coerce").sum() if milk_col else 0
 
-    # --- Total milk distributed ---
     total_milk_m = sum_numeric_columns(df_milk_m, exclude_cols=["Timestamp", "Date"])
     total_milk_e = sum_numeric_columns(df_milk_e, exclude_cols=["Timestamp", "Date"])
     total_milk_distributed = total_milk_m + total_milk_e
     remaining_milk = total_milk_produced - total_milk_distributed
 
-    # --- Total expense ---
     total_expense = pd.to_numeric(df_expense["Amount"], errors="coerce").sum() if not df_expense.empty else 0
+    total_payment_received = pd.to_numeric(df_payment_received["Amount"], errors="coerce").sum() if not df_payment_received.empty else 0
+    total_investment = pd.to_numeric(df_investment["Amount"], errors="coerce").sum() if not df_investment.empty else 0
 
-    # --- Fund (Bipin Kumar) ---
     investment_bipin = (
         df_investment.loc[df_investment["Paid To"] == "Bipin Kumar", "Amount"].sum()
         if "Paid To" in df_investment.columns
@@ -119,26 +169,25 @@ if page == "🏠 Dashboard":
     )
     fund_bipin = investment_bipin + received_bipin - expense_bipin
 
-    # --- Lifetime metrics ---
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("🥛 Total Milk Produced", f"{total_milk_produced:.2f} L")
-    col2.metric("🚚 Total Milk Distributed", f"{total_milk_distributed:.2f} L")
-    col3.metric("❗ Remaining / Lost Milk", f"{remaining_milk:.2f} L")
-    col4.metric("💰 Total Expense", f"₹{total_expense:,.2f}")
+    # -------------------- Metrics --------------------
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("🥛 Total Milk Produced", f"{total_milk_produced:.2f} L")
+    c2.metric("🚚 Total Milk Distributed", f"{total_milk_distributed:.2f} L")
+    c3.metric("❗ Remaining / Lost Milk", f"{remaining_milk:.2f} L")
+    c4.metric("💸 Total Expense", f"₹{total_expense:,.2f}")
 
-    col5, _ = st.columns(2)
-    col5.metric("🏦 Fund Available (Bipin Kumar)", f"₹{fund_bipin:,.2f}")
+    c5, c6, c7 = st.columns(3)
+    c5.metric("💰 Total Payment Received", f"₹{total_payment_received:,.2f}")
+    c6.metric("📈 Total Investment", f"₹{total_investment:,.2f}")
+    c7.metric("🏦 Fund (Bipin Kumar)", f"₹{fund_bipin:,.2f}")
 
-    st.markdown("---")
+    st.markdown("<hr/>", unsafe_allow_html=True)
 
-    # ------------------------------
-    # CURRENT MONTH SUMMARY
-    # ------------------------------
+    # -------------------- Current Month Summary --------------------
     today = pd.Timestamp.today()
     current_month_name = today.strftime("%B %Y")
     st.subheader(f"📅 Current Month Summary ({current_month_name})")
 
-    # --- Filter data for current month ---
     def filter_month(df):
         if df.empty or "Date" not in df.columns:
             return df
@@ -148,42 +197,79 @@ if page == "🏠 Dashboard":
     df_month_milk_m = filter_month(df_milk_m)
     df_month_milk_e = filter_month(df_milk_e)
     df_month_cow_log = filter_month(df_cow_log)
+    df_month_payment = filter_month(df_payment_received)
 
-    # --- Current month metrics ---
     milk_col = next((c for c in df_month_cow_log.columns if "milk" in c.lower() or "दूध" in c), None)
     milk_month = pd.to_numeric(df_month_cow_log[milk_col], errors="coerce").sum() if milk_col else 0
     milk_m_month = sum_numeric_columns(df_month_milk_m, exclude_cols=["Timestamp", "Date"])
     milk_e_month = sum_numeric_columns(df_month_milk_e, exclude_cols=["Timestamp", "Date"])
     milk_distributed_month = milk_m_month + milk_e_month
     remaining_milk_month = milk_month - milk_distributed_month
+
     expense_month = pd.to_numeric(df_month_expense["Amount"], errors="coerce").sum() if not df_month_expense.empty else 0
+    payment_month = pd.to_numeric(df_month_payment["Amount"], errors="coerce").sum() if not df_month_payment.empty else 0
 
-    # --- Current month metrics display ---
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("🥛 Milk Produced (This Month)", f"{milk_month:.2f} L")
-    col2.metric("🚚 Milk Distributed (This Month)", f"{milk_distributed_month:.2f} L")
-    col3.metric("❗ Remaining / Lost Milk (This Month)", f"{remaining_milk_month:.2f} L")
-    col4.metric("💰 Expense (This Month)", f"₹{expense_month:,.2f}")
+    cm1, cm2, cm3, cm4, cm5 = st.columns(5)
+    cm1.metric("🥛 Milk Produced (This Month)", f"{milk_month:.2f} L")
+    cm2.metric("🚚 Milk Distributed (This Month)", f"{milk_distributed_month:.2f} L")
+    cm3.metric("❗ Remaining Milk (This Month)", f"{remaining_milk_month:.2f} L")
+    cm4.metric("💸 Expense (This Month)", f"₹{expense_month:,.2f}")
+    cm5.metric("💰 Payment Received (This Month)", f"₹{payment_month:,.2f}")
 
-    st.markdown("---")
+    st.markdown("<hr/>", unsafe_allow_html=True)
 
-    # ------------------------------
-    # VISUAL INSIGHTS
-    # ------------------------------
-    st.subheader("📈 Visual Insights")
-
-    # --- Daily milk production chart ---
-    if not df_cow_log.empty and "Date" in df_cow_log.columns and milk_col:
-        daily_milk = df_cow_log.groupby("Date")[milk_col].sum().reset_index()
-        st.line_chart(daily_milk, x="Date", y=milk_col, use_container_width=True)
-
-    # --- Expense trend chart ---
-    if not df_expense.empty and "Amount" in df_expense.columns:
-        expense_trend = df_expense.groupby(df_expense["Date"].dt.date)["Amount"].sum().reset_index()
-        st.bar_chart(expense_trend, x="Date", y="Amount", use_container_width=True)
-
-    st.success("✅ Dashboard updated with lifetime and current month summaries (from 1 Nov 2025).")
-
+    # -------------------- Milk Production vs Delivery Graph --------------------
+    # -------------------- Milk Production vs Delivery Graph --------------------
+    st.subheader("📈 Milk Production vs Delivery Trend")
+    
+    # --- Centered Radio Button for Date Range
+    col1, col2, col3 = st.columns([1, 3, 1])  # Center alignment
+    with col2:
+        range_option = st.radio(
+            "",
+            ["1 Week", "1 Month", "3 Months", "6 Months", "1 Year", "3 Years", "5 Years", "Max"],
+            horizontal=True,
+            index=1,  # Default to "3 Months"
+        )
+    
+    # --- Determine date range based on selection
+    today = pd.Timestamp.today()
+    date_limit = {
+        "1 Week": today - pd.Timedelta(weeks=1),
+        "1 Month": today - pd.DateOffset(months=1),
+        "3 Months": today - pd.DateOffset(months=3),
+        "6 Months": today - pd.DateOffset(months=6),
+        "1 Year": today - pd.DateOffset(years=1),
+        "3 Years": today - pd.DateOffset(years=3),
+        "5 Years": today - pd.DateOffset(years=5),
+        "Max": START_DATE,
+    }[range_option]
+    
+    # --- Prepare production data
+    if not df_cow_log.empty and milk_col:
+        df_cow_log["Date"] = pd.to_datetime(df_cow_log["Date"], errors="coerce")
+        df_cow_log = df_cow_log[df_cow_log["Date"] >= date_limit]
+        daily_prod = df_cow_log.groupby("Date")[milk_col].sum().reset_index()
+    else:
+        daily_prod = pd.DataFrame(columns=["Date", "Produced"])
+    
+    # --- Combine morning & evening distribution
+    def combine_distribution(df1, df2):
+        df_all = pd.concat([df1, df2])
+        df_all["Date"] = pd.to_datetime(df_all["Date"], errors="coerce")
+        df_all["Total"] = df_all.select_dtypes(include="number").sum(axis=1)
+        return df_all.groupby("Date")["Total"].sum().reset_index()
+    
+    df_delivery = combine_distribution(df_milk_m, df_milk_e)
+    df_delivery = df_delivery[df_delivery["Date"] >= date_limit]
+    
+    # --- Display line chart
+    if not daily_prod.empty and not df_delivery.empty:
+        chart_df = pd.merge(daily_prod, df_delivery, on="Date", how="outer").fillna(0)
+        chart_df = chart_df.rename(columns={milk_col: "Produced", "Total": "Delivered"})
+        st.line_chart(chart_df.set_index("Date"))
+    else:
+        st.info("No sufficient data for chart.")
 
 # ----------------------------
 # MILKING & FEEDING PAGE
