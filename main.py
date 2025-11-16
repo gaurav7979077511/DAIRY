@@ -277,6 +277,18 @@ if page == "🏠 Dashboard":
 elif page == "Milking & Feeding":
     st.title("🐄 Milking & Feeding Analysis")
 
+    # Add Milking & Feeding Button
+    col1, col2 = st.columns([6, 1])
+    with col2:
+        st.markdown(
+            f'<a href="https://forms.gle/4ywNpoYLr7LFQtxe8" target="_blank">'
+            f'<button style="background-color:#81C7F5; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">Milking & Feeding</button>'
+            f'</a>',
+            unsafe_allow_html=True
+        )
+    
+        # ─────────────────────────────────────────────────────
+
     # --- Load data ---
     df = load_csv(COW_LOG_CSV_URL, drop_cols=["Timestamp"])
     df_morning = load_csv(MILK_DIS_M_CSV_URL, drop_cols=["Timestamp"])
@@ -466,16 +478,42 @@ elif page == "Milk Distribution":
 
     st.divider()
 
-    # --- Morning Distribution Table ---
-    st.subheader("🌅 Morning Distribution")
+    # Add Morning Distribution Button
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        # --- Morning Distribution Table ---
+        st.subheader("🌅 Morning Distribution")
+    with col2:
+        st.markdown(
+            f'<a href="https://forms.gle/vWfoRDfPtzJiTKZw7" target="_blank">'
+            f'<button style="background-color:#FFCA28; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">Morning Distribution</button>'
+            f'</a>',
+            unsafe_allow_html=True
+        )
+    
+        # ─────────────────────────────────────────────────────
     if not df_morning.empty:
         df_morning_display = df_morning.sort_values("Date", ascending=False)
         st.dataframe(df_morning_display, use_container_width=True)
     else:
         st.info("No morning distribution data available after 1 Nov 2025.")
 
-    # --- Evening Distribution Table ---
-    st.subheader("🌇 Evening Distribution")
+    
+    # Add Evening Distribution Button
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        # --- Evening Distribution Table ---
+        st.subheader("🌇 Evening Distribution")
+    with col2:
+        st.markdown(
+            f'<a href="https://forms.gle/5f6Wuh7TNLtC2z9o6" target="_blank">'
+            f'<button style="background-color:#FF7043; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">Evening Distribution</button>'
+            f'</a>',
+            unsafe_allow_html=True
+        )
+    
+        # ─────────────────────────────────────────────────────
+
     if not df_evening.empty:
         df_evening_display = df_evening.sort_values("Date", ascending=False)
         st.dataframe(df_evening_display, use_container_width=True)
@@ -510,6 +548,18 @@ elif page == "Milk Distribution":
 # ----------------------------
 elif page == "Expense":
     st.title("💸 Expense Tracker")
+
+    # Add Expense  Button
+    col1, col2 = st.columns([6, 1])
+    with col2:
+        st.markdown(
+            f'<a href="https://forms.gle/1hCkiBgU8sQKw87S8" target="_blank">'
+            f'<button style="background-color:#C62828; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">Add Expense</button>'
+            f'</a>',
+            unsafe_allow_html=True
+        )
+    
+        # ─────────────────────────────────────────────────────
 
     df_expense = load_csv(EXPENSE_CSV_URL, drop_cols=["Timestamp"])
 
@@ -564,11 +614,34 @@ elif page == "Expense":
 
 elif page == "Payments":
     st.title("💰 Payments Record")
+    # Add Payment  Button
+    col1, col2 = st.columns([6, 1])
+    with col2:
+        st.markdown(
+            f'<a href="https://forms.gle/jjaWGAUeTKkkoabX6" target="_blank">'
+            f'<button style="background-color:#9C27B0; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">Add Payment</button>'
+            f'</a>',
+            unsafe_allow_html=True
+        )
+    
+        # ─────────────────────────────────────────────────────
+    
     df_payment = load_csv(PAYMENT_CSV_URL, drop_cols=["Timestamp"])
     st.dataframe(df_payment, use_container_width=True if not df_payment.empty else False)
 
 elif page == "Investments":
     st.title("📈 Investment Log")
+    # Add Investment  Button
+    col1, col2 = st.columns([6, 1])
+    with col2:
+        st.markdown(
+            f'<a href="https://forms.gle/usPuRopj64DuxVpJA" target="_blank">'
+            f'<button style="background-color:#2E7D32; color:white; padding:8px 16px; font-size:14px; border:none; border-radius:5px;">Add Investment</button>'
+            f'</a>',
+            unsafe_allow_html=True
+        )
+    
+        # ─────────────────────────────────────────────────────
     df_invest = load_csv(INVESTMENT_CSV_URL, drop_cols=["Timestamp"])
     st.dataframe(df_invest, use_container_width=True if not df_invest.empty else False)
 
